@@ -1,14 +1,19 @@
 import React, { useEffect, useState } from 'react';
+import { io, Socket } from 'socket.io-client';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import PhotoZoneContainer from './components/PhotoZone/PhotoZoneContainer';
 import { isBrowserSupported } from './utils/mediaUtils';
 import { ERROR_MESSAGES, UI_TEXT } from './utils/constants';
+import { FilterType } from './components/ControlPanel/ControlPanel';
 import './App.css';
 
 const App: React.FC = () => {
   const [browserSupported, setBrowserSupported] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentFilter, setCurrentFilter] = useState<FilterType>('none');
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [socketConnected, setSocketConnected] = useState(false);
 
   // 브라우저 지원 확인
   useEffect(() => {
@@ -33,6 +38,43 @@ const App: React.FC = () => {
   // 페이지 제목 설정
   useEffect(() => {
     document.title = UI_TEXT.HEADER_TITLE;
+  }, []);
+
+  // 소켓 연결 및 통신 설정
+  useEffect(() => {
+    // 소켓 연결
+    const newSocket = io('http://localhost:3002');
+    setSocket(newSocket);
+
+    // 연결 성공
+    newSocket.on('connect', () => {
+      console.log('메인 디스플레이: 소켓 서버에 연결됨');
+      setSocketConnected(true);
+      // 메인 디스플레이로 등록
+      newSocket.emit('register', 'mainDisplay');
+    });
+
+    // 연결 실패
+    newSocket.on('disconnect', () => {
+      console.log('메인 디스플레이: 소켓 서버 연결 해제됨');
+      setSocketConnected(false);
+    });
+
+    // 필터 업데이트 수신
+    newSocket.on('filterUpdate', (data) => {
+      setCurrentFilter(data.filter);
+      console.log(`메인 디스플레이: 필터 적용됨 - ${data.filter}`);
+    });
+
+    // 연결 에러 처리
+    newSocket.on('connect_error', (error) => {
+      console.error('메인 디스플레이: 소켓 연결 에러:', error);
+      setSocketConnected(false);
+    });
+
+    return () => {
+      newSocket.close();
+    };
   }, []);
 
   // 로딩 중
@@ -155,8 +197,35 @@ const App: React.FC = () => {
         <Header />
         
         <main style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-          <PhotoZoneContainer />
+          <PhotoZoneContainer currentFilter={currentFilter} />
         </main>
+        
+        {/* 현재 적용된 필터 표시 */}
+        {currentFilter !== 'none' && (
+          <div style={{
+            position: 'fixed',
+            top: '20px',
+            left: '20px',
+            background: 'rgba(0, 0, 0, 0.7)',
+            color: '#ffffff',
+            padding: '12px 20px',
+            borderRadius: '25px',
+            fontSize: '16px',
+            fontWeight: '500',
+            backdropFilter: 'blur(10px)',
+            border: '2px solid rgba(255, 255, 255, 0.2)',
+            zIndex: 1000
+          }}>
+            <span style={{ marginRight: '8px' }}>
+              {currentFilter === 'flower' ? '🌸' : 
+               currentFilter === 'space' ? '🌌' : 
+               currentFilter === 'forest' ? '🌲' : ''}
+            </span>
+            {currentFilter === 'flower' ? '꽃 필터' :
+             currentFilter === 'space' ? '우주 필터' :
+             currentFilter === 'forest' ? '숲 필터' : ''} 적용 중
+          </div>
+        )}
         
         <Footer />
       </div>

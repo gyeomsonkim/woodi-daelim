@@ -2,13 +2,15 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useCamera } from '../../hooks/useCamera';
 import CameraView from '../CameraView/CameraView';
 import { UI_TEXT } from '../../utils/constants';
+import { FilterType } from '../ControlPanel/ControlPanel';
 import styles from './PhotoZoneContainer.module.css';
 
 interface PhotoZoneContainerProps {
   className?: string;
+  currentFilter?: FilterType;
 }
 
-const PhotoZoneContainer: React.FC<PhotoZoneContainerProps> = ({ className }) => {
+const PhotoZoneContainer: React.FC<PhotoZoneContainerProps> = ({ className, currentFilter = 'none' }) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<string>(UI_TEXT.LOADING_CAMERA);
 
@@ -83,6 +85,7 @@ const PhotoZoneContainer: React.FC<PhotoZoneContainerProps> = ({ className }) =>
         <div className={styles.cameraContainer}>
           <CameraView
             videoRef={videoRef}
+            currentFilter={currentFilter}
           />
         </div>
       )}
