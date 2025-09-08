@@ -1,0 +1,168 @@
+/* Footer 컴포넌트 스타일 */
+
+.footer {
+  width: 100%;
+  max-width: 1200px; /* 비디오 크기와 맞춤 */
+  margin-top: 16px; /* 1920x1080에서 더 타이트한 간격 */
+  padding: 20px;
+  text-align: center;
+}
+
+.content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.description {
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: #E0E0E0;
+  line-height: 1.7;
+  margin: 0;
+  padding: 0 16px;
+  text-align: center;
+  opacity: 0.9;
+  letter-spacing: -0.2px;
+  animation: fadeInUp 1s ease-in-out;
+}
+
+.performanceInfo {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #FFFFFF;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* 애니메이션 */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 0.9;
+    transform: translateY(0);
+  }
+}
+
+/* 대형 스크린 최적화 (1920x1080+) */
+@media (min-width: 1920px) {
+  .footer {
+    max-width: 1400px; /* 비디오 크기와 맞춤 */
+    margin-top: 12px; /* 더 타이트한 간격으로 하단 텍스트가 화면 하단에 더 가까이 */
+    margin-bottom: 20px; /* 바닥에서 적절한 여백 유지 */
+    padding: 24px;
+  }
+  
+  .description {
+    font-size: 18px; /* 1920x1080에서 더 읽기 좋은 크기 */
+    line-height: 1.8;
+    opacity: 0.95;
+  }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .footer {
+    margin-top: 24px;
+    padding: 16px;
+  }
+  
+  .description {
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 0 12px;
+  }
+  
+  .performanceInfo {
+    bottom: 16px;
+    right: 16px;
+    font-size: 10px;
+    padding: 6px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer {
+    margin-top: 20px;
+    padding: 12px;
+  }
+  
+  .description {
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 0 8px;
+  }
+  
+  .performanceInfo {
+    bottom: 12px;
+    right: 12px;
+    font-size: 9px;
+    padding: 4px 6px;
+  }
+}
+
+/* 다크모드 대응 */
+@media (prefers-color-scheme: dark) {
+  .description {
+    color: #E0E0E0;
+  }
+  
+  .performanceInfo {
+    background: rgba(0, 0, 0, 0.9);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+}
+
+/* 고해상도 디스플레이 대응 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .description {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  .description {
+    animation: none;
+  }
+}
+
+/* 텍스트 선택 스타일 */
+.description::selection {
+  background: rgba(30, 136, 229, 0.3);
+  color: #FFFFFF;
+}
+
+.description::-moz-selection {
+  background: rgba(30, 136, 229, 0.3);
+  color: #FFFFFF;
+}
+
+/* 호버 효과 */
+.description:hover {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+/* 포커스 스타일 */
+.description:focus-visible {
+  outline: 2px solid #1E88E5;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
