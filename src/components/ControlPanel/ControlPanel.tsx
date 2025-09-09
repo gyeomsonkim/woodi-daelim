@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import styles from './ControlPanel.module.css';
+import React from 'react';
+import styled from 'styled-components';
 
 export type FilterType = 'flower' | 'space' | 'forest' | 'none';
 
@@ -8,92 +8,185 @@ interface ControlPanelProps {
   currentFilter: FilterType;
 }
 
+const Container = styled.div`
+  min-height: 100vh;
+  padding: 80px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+`;
+
+const Header = styled.header`
+  text-align: center;
+  margin-bottom: 80px;
+`;
+
+const Title = styled.h1`
+  font-size: 3.5rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 16px 0;
+  letter-spacing: -0.02em;
+
+  @media (max-width: 768px) {
+    font-size: 2.8rem;
+  }
+`;
+
+const Subtitle = styled.p`
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  font-weight: 400;
+
+  @media (max-width: 768px) {
+    font-size: 1.1rem;
+  }
+`; 
+
+const FilterGrid = styled.div`
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    gap: 16px;
+  }
+`;
+
+interface FilterButtonProps {
+  $isActive: boolean;
+  $filterType: 'flower' | 'space' | 'forest' | 'reset';
+}
+
+const FilterButton = styled.button<FilterButtonProps>`
+  width: 300px;
+  height: 300px;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 0 16px 0;
+  position: relative;
+  overflow: hidden;
+
+  /* Default background */
+  background: #ffffff;
+  
+  /* Filter-specific backgrounds */
+  ${props => props.$filterType === 'flower' && `background: #0060cc;`}
+  ${props => props.$filterType === 'space' && `background: #019391;`}
+  ${props => props.$filterType === 'forest' && `background: #00dfc3;`}
+  ${props => props.$filterType === 'reset' && `background: #ffffff;`}
+
+  /* Active state */
+  ${props => props.$isActive && `
+    background: #00dfc3 !important;
+    transform: translateY(-2px);
+  `}
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  @media (max-width: 768px) {
+    width: 100px;
+    height: 140px;
+  }
+`;
+
+interface FilterLabelProps {
+  $filterType: 'flower' | 'space' | 'forest' | 'reset';
+  $isActive: boolean;
+}
+
+const FilterLabel = styled.div<FilterLabelProps>`
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+
+  /* Default color */
+  color: #3a4a5c;
+  
+  /* Filter-specific colors */
+  ${props => props.$filterType === 'flower' && `color: #ffffff;`}
+  ${props => props.$filterType === 'space' && `color: #ffffff;`}
+  ${props => props.$filterType === 'forest' && `color: #3a4a5c;`}
+  ${props => props.$filterType === 'reset' && `color: #3a4a5c;`}
+
+  /* Active state font weight */
+  ${props => props.$isActive && `font-weight: 600;`}
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+  }
+`;
+
 const ControlPanel: React.FC<ControlPanelProps> = ({ onFilterChange, currentFilter }) => {
   const filters = [
     {
       id: 'flower' as FilterType,
-      name: '꽃 필터',
-      emoji: '🌸',
-      description: '아름다운 꽃밭 배경',
-      color: '#FF69B4'
+      name: '꽃',
+      type: 'flower' as const
     },
     {
       id: 'space' as FilterType,
-      name: '우주 필터',
-      emoji: '🌌',
-      description: '신비로운 우주 배경',
-      color: '#4169E1'
+      name: '우주',
+      type: 'space' as const
     },
     {
       id: 'forest' as FilterType,
-      name: '숲 필터',
-      emoji: '🌲',
-      description: '평화로운 숲 배경',
-      color: '#228B22'
+      name: '숲',
+      type: 'forest' as const
     }
   ];
 
   return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>포토존 제어 패널</h1>
-        <p className={styles.subtitle}>원하는 배경 필터를 선택하세요</p>
-      </header>
+    <Container>
+      <Header>
+        <Title>필터 선택</Title>
+        <Subtitle>적용하고 싶은 필터를 선택해주세요</Subtitle>
+      </Header>
 
-      <div className={styles.filterGrid}>
+      <FilterGrid>
         {filters.map((filter) => (
-          <button
+          <FilterButton
             key={filter.id}
-            className={`${styles.filterButton} ${
-              currentFilter === filter.id ? styles.active : ''
-            }`}
+            $isActive={currentFilter === filter.id}
+            $filterType={filter.type}
             onClick={() => onFilterChange(filter.id)}
-            style={{
-              '--filter-color': filter.color
-            } as React.CSSProperties}
           >
-            <div className={styles.filterEmoji}>
-              {filter.emoji}
-            </div>
-            <div className={styles.filterContent}>
-              <h2 className={styles.filterName}>{filter.name}</h2>
-              <p className={styles.filterDescription}>{filter.description}</p>
-            </div>
-            {currentFilter === filter.id && (
-              <div className={styles.activeIndicator}>
-                <span>활성</span>
-              </div>
-            )}
-          </button>
+            <FilterLabel 
+              $filterType={filter.type}
+              $isActive={currentFilter === filter.id}
+            >
+              {filter.name}
+            </FilterLabel>
+          </FilterButton>
         ))}
-      </div>
-
-      <div className={styles.resetSection}>
-        <button
-          className={`${styles.resetButton} ${
-            currentFilter === 'none' ? styles.active : ''
-          }`}
+        
+        <FilterButton
+          $isActive={currentFilter === 'none'}
+          $filterType="reset"
           onClick={() => onFilterChange('none')}
         >
-          <span className={styles.resetIcon}>🔄</span>
-          필터 해제
-        </button>
-      </div>
-
-      <div className={styles.status}>
-        <div className={styles.statusIndicator}>
-          <span className={styles.statusDot}></span>
-          <span className={styles.statusText}>
-            현재 적용: {
-              currentFilter === 'none' 
-                ? '필터 없음' 
-                : filters.find(f => f.id === currentFilter)?.name || '알 수 없음'
-            }
-          </span>
-        </div>
-      </div>
-    </div>
+          <FilterLabel 
+            $filterType="reset"
+            $isActive={currentFilter === 'none'}
+          >
+            초기화
+          </FilterLabel>
+        </FilterButton>
+      </FilterGrid>
+    </Container>
   );
 };
 
-export default ControlPanel; 
+export default ControlPanel;
