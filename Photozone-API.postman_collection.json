@@ -1,0 +1,386 @@
+{
+  "info": {
+    "name": "대림대학교 포토존 API",
+    "description": "포토존 애플리케이션의 필터 관리 및 통계 API 컬렉션\n\n## 기본 정보\n- Base URL: http://localhost:3002\n- Database: SQLite with Sequelize ORM\n- Socket Server: Real-time filter updates\n\n## 사용 가능한 필터\n- none: 필터 없음 📷\n- flower: 꽃밭 배경 🌸\n- space: 우주 배경 🌌\n- forest: 숲 배경 🌲",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "photozone-api-v1"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "item": [
+    {
+      "name": "Filter Management",
+      "description": "필터 조회 및 관리 API",
+      "item": [
+        {
+          "name": "모든 활성 필터 조회",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/filters",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "filters"]
+            },
+            "description": "활성화된 모든 필터를 정렬 순서에 따라 조회합니다."
+          },
+          "response": [
+            {
+              "name": "성공 응답",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"none\",\n      \"display_name\": \"필터 없음\",\n      \"description\": \"배경 제거 없이 원본 영상을 표시합니다.\",\n      \"background_image\": null,\n      \"icon\": \"📷\",\n      \"is_active\": true,\n      \"sort_order\": 0,\n      \"usage_count\": 0,\n      \"last_used_at\": null\n    }\n  ],\n  \"message\": \"필터 목록 조회 성공\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "특정 필터 조회",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/filters/:filterName",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "filters", ":filterName"],
+              "variable": [
+                {
+                  "key": "filterName",
+                  "value": "flower",
+                  "description": "필터 이름 (none, flower, space, forest)"
+                }
+              ]
+            },
+            "description": "특정 필터의 상세 정보를 조회합니다."
+          },
+          "response": [
+            {
+              "name": "성공 응답 - flower",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": 2,\n    \"name\": \"flower\",\n    \"display_name\": \"꽃밭 배경\",\n    \"description\": \"아름다운 꽃밭 배경으로 변경합니다.\",\n    \"background_image\": \"/images/backgrounds/flower-garden.jpg\",\n    \"icon\": \"🌸\",\n    \"is_active\": true,\n    \"sort_order\": 1,\n    \"usage_count\": 0,\n    \"last_used_at\": null\n  },\n  \"message\": \"필터 조회 성공\"\n}"
+            },
+            {
+              "name": "필터 찾을 수 없음",
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"필터를 찾을 수 없습니다.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "인기 필터 조회",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/filters/popular/top?limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "filters", "popular", "top"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5",
+                  "description": "조회할 필터 개수 (기본값: 5)"
+                }
+              ]
+            },
+            "description": "사용 횟수가 많은 인기 필터를 조회합니다."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Filter Usage Tracking",
+      "description": "필터 사용 추적 및 통계 API",
+      "item": [
+        {
+          "name": "필터 사용 기록",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/filters/:filterName/use",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "filters", ":filterName", "use"],
+              "variable": [
+                {
+                  "key": "filterName",
+                  "value": "flower",
+                  "description": "사용 기록을 업데이트할 필터 이름"
+                }
+              ]
+            },
+            "description": "필터가 사용될 때마다 사용 횟수를 증가시키고 마지막 사용 시간을 업데이트합니다."
+          },
+          "response": [
+            {
+              "name": "성공 응답",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"name\": \"flower\",\n    \"usage_count\": 1,\n    \"last_used_at\": \"2025-09-10T11:28:08.670Z\"\n  },\n  \"message\": \"필터 사용 기록 업데이트 성공\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "필터 사용 통계",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/filters/stats/usage",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "filters", "stats", "usage"]
+            },
+            "description": "모든 필터의 사용 통계를 조회합니다. 사용 횟수, 사용률, 마지막 사용 시간 등을 포함합니다."
+          },
+          "response": [
+            {
+              "name": "성공 응답",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"total_filters\": 4,\n    \"total_usage\": 15,\n    \"filters\": [\n      {\n        \"name\": \"flower\",\n        \"display_name\": \"꽃밭 배경\",\n        \"usage_count\": 10,\n        \"usage_percentage\": \"66.67\",\n        \"last_used_at\": \"2025-09-10T11:28:08.670Z\"\n      }\n    ]\n  },\n  \"message\": \"필터 사용 통계 조회 성공\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Filter Admin",
+      "description": "필터 관리자 기능 (생성, 수정, 삭제)",
+      "item": [
+        {
+          "name": "새 필터 생성",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/filters",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "filters"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"sunset\",\n  \"display_name\": \"석양 배경\",\n  \"description\": \"아름다운 석양 배경으로 변경합니다.\",\n  \"background_image\": \"/images/backgrounds/sunset-beach.jpg\",\n  \"icon\": \"🌅\",\n  \"is_active\": true,\n  \"sort_order\": 4\n}"
+            },
+            "description": "새로운 필터를 생성합니다. name과 display_name은 필수 항목입니다."
+          },
+          "response": [
+            {
+              "name": "성공 응답",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": 5,\n    \"name\": \"sunset\",\n    \"display_name\": \"석양 배경\",\n    \"description\": \"아름다운 석양 배경으로 변경합니다.\",\n    \"background_image\": \"/images/backgrounds/sunset-beach.jpg\",\n    \"icon\": \"🌅\",\n    \"is_active\": true,\n    \"sort_order\": 4,\n    \"usage_count\": 0,\n    \"last_used_at\": null\n  },\n  \"message\": \"필터 생성 성공\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "필터 수정",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/filters/:filterName",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "filters", ":filterName"],
+              "variable": [
+                {
+                  "key": "filterName",
+                  "value": "sunset",
+                  "description": "수정할 필터 이름"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"display_name\": \"황금 석양 배경\",\n  \"description\": \"황금빛 석양이 아름다운 배경으로 변경합니다.\",\n  \"icon\": \"🌇\",\n  \"is_active\": true,\n  \"sort_order\": 4\n}"
+            },
+            "description": "기존 필터의 정보를 수정합니다. 필터 이름(name)은 변경할 수 없습니다."
+          }
+        },
+        {
+          "name": "필터 삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/filters/:filterName",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "filters", ":filterName"],
+              "variable": [
+                {
+                  "key": "filterName",
+                  "value": "sunset",
+                  "description": "삭제할 필터 이름"
+                }
+              ]
+            },
+            "description": "필터를 완전히 삭제합니다. 삭제된 필터는 복구할 수 없습니다."
+          }
+        }
+      ]
+    },
+    {
+      "name": "System Health",
+      "description": "시스템 상태 확인 API",
+      "item": [
+        {
+          "name": "헬스체크",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "서버와 데이터베이스 상태, 연결된 클라이언트 정보, 현재 필터 상태를 확인합니다."
+          },
+          "response": [
+            {
+              "name": "정상 상태",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"ok\",\n  \"database\": \"connected\",\n  \"connectedClients\": {\n    \"mainDisplay\": true,\n    \"controlPanel\": true\n  },\n  \"currentFilter\": \"flower\",\n  \"currentFilterInfo\": {\n    \"name\": \"flower\",\n    \"display_name\": \"꽃밭 배경\",\n    \"icon\": \"🌸\",\n    \"background_image\": \"/images/backgrounds/flower-garden.jpg\"\n  },\n  \"totalActiveFilters\": 4,\n  \"timestamp\": \"2025-09-10T12:00:00.000Z\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3002",
+      "description": "포토존 서버 기본 URL"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// 요청 전 공통 설정",
+          "pm.request.headers.add({",
+          "    key: 'User-Agent',",
+          "    value: 'Postman/Photozone-API-Test'",
+          "});"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// 응답 검증",
+          "pm.test('응답 시간이 5초 이내인지 확인', function() {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "pm.test('Content-Type이 JSON인지 확인', function() {",
+          "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+          "});",
+          "",
+          "// 성공 응답 구조 검증",
+          "if (pm.response.code === 200 && pm.response.json().success) {",
+          "    pm.test('성공 응답 구조 검증', function() {",
+          "        const response = pm.response.json();",
+          "        pm.expect(response).to.have.property('success', true);",
+          "        pm.expect(response).to.have.property('data');",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ]
+}
