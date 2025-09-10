@@ -49,6 +49,20 @@ pids
 # Yarn Integrity file
 .yarn-integrity
 
+# Yarn 4.x cache and PnP files
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+.yarn-cache/
+
+# Yarn 4.x - 포함해야 할 파일들
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+
 # dotenv environment variables file
 .env
 .env.test

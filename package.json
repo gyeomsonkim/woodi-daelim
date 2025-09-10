@@ -11,6 +11,11 @@
     "photozone"
   ],
   "author": "Daelim University",
+  "packageManager": "yarn@1.22.19",
+  "engines": {
+    "node": ">=16.0.0",
+    "yarn": ">=1.22.0"
+  },
   "dependencies": {
     "@types/node": "^18.19.0",
     "@types/react": "^18.2.0",
@@ -35,7 +40,10 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "serve -s build"
+    "preview": "serve -s build",
+    "yarn:install": "yarn install",
+    "yarn:upgrade": "yarn upgrade",
+    "yarn:check": "yarn check"
   },
   "eslintConfig": {
     "extends": [
