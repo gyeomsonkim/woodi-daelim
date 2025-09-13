@@ -4,9 +4,9 @@ import { io, Socket } from 'socket.io-client';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import PhotoZoneContainer from './components/PhotoZone/PhotoZoneContainer';
+import CountdownOverlay from './components/CountdownOverlay/CountdownOverlay';
 import { isBrowserSupported } from './utils/mediaUtils';
 import { ERROR_MESSAGES, UI_TEXT } from './utils/constants';
-import { FilterType } from './components/ControlPanel/ControlPanel';
 
 // Global styles
 const GlobalStyle = createGlobalStyle`
@@ -410,9 +410,11 @@ const FilterIndicator = styled.div`
 const App: React.FC = () => {
   const [browserSupported, setBrowserSupported] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentFilter, setCurrentFilter] = useState<FilterType>('none');
+  const [currentFilter, setCurrentFilter] = useState<TFilterType>('none');
   const [socket, setSocket] = useState<Socket | null>(null);
   const [socketConnected, setSocketConnected] = useState(false);
+  const [isCountdownActive, setIsCountdownActive] = useState(false);
+  const [captureCallback, setCaptureCallback] = useState<(() => void) | null>(null);
 
   // 브라우저 지원 확인
   useEffect(() => {
@@ -465,6 +467,12 @@ const App: React.FC = () => {
       console.log(`메인 디스플레이: 필터 적용됨 - ${data.filter}`);
     });
 
+    // 카운트다운 시작 수신
+    newSocket.on('startCountdown', () => {
+      console.log('메인 디스플레이: 카운트다운 시작');
+      setIsCountdownActive(true);
+    });
+
     // 연결 에러 처리
     newSocket.on('connect_error', (error) => {
       console.error('메인 디스플레이: 소켓 연결 에러:', error);
@@ -476,7 +484,35 @@ const App: React.FC = () => {
     };
   }, []);
 
-  const getFilterEmoji = (filter: FilterType) => {
+  // 카운트다운 틱 핸들러
+  const handleCountdownTick = (count: number) => {
+    if (socket && socketConnected) {
+      socket.emit('countdownTick', { count });
+    }
+  };
+
+  // 카운트다운 완료 핸들러
+  const handleCountdownComplete = () => {
+    console.log('메인 디스플레이: 카운트다운 완료, 사진 촬영 시작');
+    setIsCountdownActive(false);
+    
+    // 사진 촬영 실행
+    if (captureCallback) {
+      captureCallback();
+    }
+    
+    // 촬영 완료 이벤트 전송
+    if (socket && socketConnected) {
+      socket.emit('captureComplete');
+    }
+  };
+
+  // PhotoZoneContainer에서 사진 촬영 콜백 설정
+  const setCaptureFunction = (captureFunc: () => void) => {
+    setCaptureCallback(() => captureFunc);
+  };
+
+  const getFilterEmoji = (filter: TFilterType) => {
     switch (filter) {
       case 'flower': return '🌸';
       case 'space': return '🌌';
@@ -485,7 +521,7 @@ const App: React.FC = () => {
     }
   };
 
-  const getFilterName = (filter: FilterType) => {
+  const getFilterName = (filter: TFilterType) => {
     switch (filter) {
       case 'flower': return '꽃 필터';
       case 'space': return '우주 필터';
@@ -554,7 +590,10 @@ const App: React.FC = () => {
           <Header />
           
           <MainContent>
-            <PhotoZoneContainer currentFilter={currentFilter} />
+            <PhotoZoneContainer 
+              currentFilter={currentFilter} 
+              onSetCaptureFunction={setCaptureFunction}
+            />
           </MainContent>
           
           {/* 현재 적용된 필터 표시 */}
@@ -577,6 +616,13 @@ const App: React.FC = () => {
           </p>
         </div>
       </AppContainer>
+      
+      {/* 카운트다운 오버레이 - AppContainer 외부에 위치 */}
+      <CountdownOverlay
+        isActive={isCountdownActive}
+        onComplete={handleCountdownComplete}
+        onTick={handleCountdownTick}
+      />
     </>
   );
 };

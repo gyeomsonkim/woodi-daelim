@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "대림대학교 포토존 API",
-    "description": "포토존 애플리케이션의 필터 관리 및 통계 API 컬렉션\n\n## 기본 정보\n- Base URL: http://localhost:3002\n- Database: SQLite with Sequelize ORM\n- Socket Server: Real-time filter updates\n\n## 사용 가능한 필터\n- none: 필터 없음 📷\n- flower: 꽃밭 배경 🌸\n- space: 우주 배경 🌌\n- forest: 숲 배경 🌲",
+    "description": "포토존 애플리케이션의 필터 관리, 미디어 업로드 및 통계 API 컬렉션\n\n## 기본 정보\n- Base URL: http://localhost:3002\n- Database: SQLite with Sequelize ORM\n- Socket Server: Real-time filter updates\n- Media Support: Base64 photo/video upload (최대 100MB)\n\n## 사용 가능한 필터\n- none: 필터 없음 📷\n- flower: 꽃밭 배경 🌸\n- space: 우주 배경 🌌\n- forest: 숲 배경 🌲",
     "version": "1.0.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_postman_id": "photozone-api-v1"
@@ -242,35 +242,6 @@
           ]
         },
         {
-          "name": "필터 수정",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/filters/:filterName",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "filters", ":filterName"],
-              "variable": [
-                {
-                  "key": "filterName",
-                  "value": "sunset",
-                  "description": "수정할 필터 이름"
-                }
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"display_name\": \"황금 석양 배경\",\n  \"description\": \"황금빛 석양이 아름다운 배경으로 변경합니다.\",\n  \"icon\": \"🌇\",\n  \"is_active\": true,\n  \"sort_order\": 4\n}"
-            },
-            "description": "기존 필터의 정보를 수정합니다. 필터 이름(name)은 변경할 수 없습니다."
-          }
-        },
-        {
           "name": "필터 삭제",
           "request": {
             "method": "DELETE",
@@ -294,6 +265,108 @@
             },
             "description": "필터를 완전히 삭제합니다. 삭제된 필터는 복구할 수 없습니다."
           }
+        }
+      ]
+    },
+    {
+      "name": "Media Upload",
+      "description": "사진 및 동영상 Base64 업로드 API",
+      "item": [
+        {
+          "name": "사진 업로드",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/media/photo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "media", "photo"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"photoData\": \"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...\",\n  \"filterUsed\": \"flower\",\n  \"timestamp\": \"2025-09-10T12:00:00.000Z\",\n  \"metadata\": {\n    \"width\": 1920,\n    \"height\": 1080,\n    \"deviceInfo\": \"iPhone 15 Pro\"\n  }\n}"
+            },
+            "description": "Base64 인코딩된 사진 데이터를 업로드합니다. 지원 형식: JPEG, PNG, WebP (최대 10MB)"
+          },
+          "response": [
+            {
+              "name": "사진 업로드 성공",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"received\": true,\n    \"photoInfo\": {\n      \"id\": \"photo_1725968400000_abc123def\",\n      \"type\": \"photo\",\n      \"filterUsed\": \"flower\",\n      \"fileSize\": \"2.45MB\",\n      \"mimeType\": \"image/jpeg\",\n      \"timestamp\": \"2025-09-10T12:00:00.000Z\",\n      \"receivedAt\": \"2025-09-10T12:00:05.123Z\",\n      \"dataLength\": 3356780,\n      \"metadata\": {\n        \"width\": 1920,\n        \"height\": 1080,\n        \"deviceInfo\": \"iPhone 15 Pro\",\n        \"originalSize\": 2.45\n      }\n    },\n    \"message\": \"사진이 성공적으로 수신되었습니다.\"\n  },\n  \"message\": \"사진 수신 완료\"\n}"
+            },
+            {
+              "name": "파일 크기 초과",
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"photo 파일 크기가 너무 큽니다. 최대 크기: 10MB, 현재 크기: 12.34MB\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "동영상 업로드",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/media/video",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "media", "video"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"videoData\": \"data:video/mp4;base64,AAAAHGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDE...\",\n  \"filterUsed\": \"space\",\n  \"duration\": 5.2,\n  \"timestamp\": \"2025-09-10T12:00:00.000Z\",\n  \"metadata\": {\n    \"width\": 1280,\n    \"height\": 720,\n    \"fps\": 30,\n    \"codec\": \"h264\"\n  }\n}"
+            },
+            "description": "Base64 인코딩된 동영상 데이터를 업로드합니다. 지원 형식: MP4, WebM, MOV (최대 100MB)"
+          },
+          "response": [
+            {
+              "name": "동영상 업로드 성공",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"received\": true,\n    \"videoInfo\": {\n      \"id\": \"video_1725968400000_xyz789abc\",\n      \"type\": \"video\",\n      \"filterUsed\": \"space\",\n      \"duration\": 5.2,\n      \"fileSize\": \"15.67MB\",\n      \"mimeType\": \"video/mp4\",\n      \"timestamp\": \"2025-09-10T12:00:00.000Z\",\n      \"receivedAt\": \"2025-09-10T12:00:10.456Z\",\n      \"dataLength\": 21459876,\n      \"metadata\": {\n        \"width\": 1280,\n        \"height\": 720,\n        \"fps\": 30,\n        \"codec\": \"h264\",\n        \"originalSize\": 15.67\n      }\n    },\n    \"message\": \"동영상이 성공적으로 수신되었습니다.\"\n  },\n  \"message\": \"동영상 수신 완료\"\n}"
+            },
+            {
+              "name": "유효하지 않은 형식",
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"유효하지 않은 video 형식입니다. 지원되는 형식: data:video/mp4;base64,, data:video/webm;base64,, data:video/mov;base64,\"\n}"
+            }
+          ]
         }
       ]
     },

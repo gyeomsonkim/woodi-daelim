@@ -3,11 +3,11 @@ import styled, { keyframes, css } from 'styled-components';
 import { useCamera } from '../../hooks/useCamera';
 import CameraView from '../CameraView/CameraView';
 import { UI_TEXT } from '../../utils/constants';
-import { FilterType } from '../ControlPanel/ControlPanel';
 
 interface PhotoZoneContainerProps {
   className?: string;
-  currentFilter?: FilterType;
+  currentFilter?: TFilterType;
+  onSetCaptureFunction?: (captureFunc: () => void) => void;
 }
 
 const spin = keyframes`
@@ -298,9 +298,14 @@ const PerformanceInfo = styled.div`
   }
 `;
 
-const PhotoZoneContainer: React.FC<PhotoZoneContainerProps> = ({ className, currentFilter = 'none' }) => {
+const PhotoZoneContainer: React.FC<PhotoZoneContainerProps> = ({ 
+  className, 
+  currentFilter = 'none',
+  onSetCaptureFunction 
+}) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<string>(UI_TEXT.LOADING_CAMERA);
+  const [cameraViewRef, setCameraViewRef] = useState<{ capturePhoto: () => void } | null>(null);
 
   // 카메라 Hook
   const {
@@ -332,6 +337,28 @@ const PhotoZoneContainer: React.FC<PhotoZoneContainerProps> = ({ className, curr
   useEffect(() => {
     initializePhotoZone();
   }, [initializePhotoZone]);
+
+  // 사진 촬영 함수
+  const capturePhoto = useCallback(() => {
+    if (cameraViewRef && cameraViewRef.capturePhoto) {
+      console.log('PhotoZoneContainer: 사진 촬영 실행');
+      cameraViewRef.capturePhoto();
+    } else {
+      console.warn('PhotoZoneContainer: 카메라 뷰가 준비되지 않음');
+    }
+  }, [cameraViewRef]);
+
+  // CameraView에서 capture 함수를 받아오는 콜백
+  const handleCameraViewRef = useCallback((ref: { capturePhoto: () => void } | null) => {
+    setCameraViewRef(ref);
+  }, []);
+
+  // 부모 컴포넌트에 capture 함수 전달
+  useEffect(() => {
+    if (onSetCaptureFunction && isInitialized && cameraViewRef) {
+      onSetCaptureFunction(capturePhoto);
+    }
+  }, [onSetCaptureFunction, isInitialized, cameraViewRef, capturePhoto]);
 
   // 에러 상태 처리
   const currentError = cameraError;
@@ -366,6 +393,7 @@ const PhotoZoneContainer: React.FC<PhotoZoneContainerProps> = ({ className, curr
           <CameraView
             videoRef={videoRef}
             currentFilter={currentFilter}
+            onRef={handleCameraViewRef}
           />
         </CameraContainer>
       )}

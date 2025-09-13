@@ -123,57 +123,7 @@ yarn preview
 - **Canvas API** - 고성능 실시간 렌더링
 - **Web Workers** - 백그라운드 처리 (선택사항)
 - **메모리 풀링** - 가비지 컬렉션 최소화
-
-## 📁 프로젝트 구조
-
 ```
-src/
-├── components/          # React 컴포넌트
-│   ├── Header/         # 헤더 컴포넌트
-│   ├── Footer/         # 푸터 컴포넌트
-│   ├── CameraView/     # 카메라 뷰 컴포넌트
-│   ├── PhotoZone/      # 메인 포토존 컨테이너
-│   └── ControlPanel/   # 필터 제어 패널 컴포넌트
-├── hooks/              # 커스텀 React Hooks
-│   ├── useCamera.ts    # 카메라 관리 Hook
-│   └── useMediaPipe.ts # MediaPipe 처리 Hook
-├── types/              # TypeScript 타입 정의
-│   └── mediapipe.d.ts  # MediaPipe 타입
-├── utils/              # 유틸리티 함수
-│   ├── constants.ts    # 상수 정의
-│   ├── mediaUtils.ts   # 미디어 처리 유틸리티
-│   └── reportWebVitals.ts # 성능 측정
-├── App.tsx             # 메인 디스플레이 앱
-├── ControlPanelApp.tsx # 제어 패널 앱
-└── index.tsx           # 앱 엔트리포인트
-```
-
-## 🎯 핵심 컴포넌트
-
-### useCamera Hook
-카메라 스트림 관리 및 최적화
-- 자동 해상도 조정
-- 디바이스 방향 변경 대응
-- 페이지 가시성 기반 최적화
-
-### useMediaPipe Hook  
-MediaPipe 모델 관리 및 실시간 처리
-- 모델 로딩 및 설정
-- 프레임별 세그멘테이션 처리
-- 성능 모니터링
-
-### PhotoZoneContainer
-전체 포토존 로직 조율
-- Hook 통합 관리
-- 실시간 처리 루프
-- 에러 상태 관리
-
-## ⚡ 성능 특징
-
-- **30fps** 실시간 처리
-- **<50ms** 지연시간
-- **<500MB** 메모리 사용량
-- **95%+** 인물 경계 정확도
 
 ## 🛠️ 개발 도구
 
@@ -191,11 +141,6 @@ yarn lint            # ESLint 실행
 yarn format          # Prettier 포매팅
 ```
 
-### 개발 모드 기능
-- 실시간 FPS 모니터링
-- 성능 메트릭 표시
-- 브라우저 개발자 도구 통합
-
 ## 📱 브라우저 호환성
 
 | 브라우저 | 최소 버전 | 권장 버전 |
@@ -204,52 +149,3 @@ yarn format          # Prettier 포매팅
 | Firefox | 85+ | 최신 |
 | Safari | 14+ | 최신 |
 | Edge | 88+ | 최신 |
-
-## 🔧 설정
-
-### 환경 변수
-```env
-# 개발/프로덕션 모드
-NODE_ENV=development
-
-# 성능 모니터링
-REACT_APP_ENABLE_PERFORMANCE_MONITORING=true
-```
-
-### MediaPipe 설정
-`src/utils/constants.ts`에서 설정 조정 가능:
-- 모델 선택 (일반/풍경)
-- 세그멘테이션 임계값
-- 성능 최적화 옵션
-
-## 🚨 문제 해결
-
-### 카메라 접근 오류
-1. 브라우저에서 카메라 권한 확인
-2. HTTPS 환경에서 실행 (로컬은 localhost 사용)
-3. 다른 애플리케이션이 카메라 사용 중인지 확인
-
-### 성능 최적화
-1. 브라우저 하드웨어 가속 활성화
-2. 불필요한 브라우저 탭/확장 프로그램 종료
-3. 충분한 조명 환경 확보
-
-### MediaPipe 로딩 오류
-1. 인터넷 연결 상태 확인
-2. CDN 접근 가능 여부 확인
-3. 브라우저 캐시 초기화
-
-## 📄 라이선스
-
-MIT License - 자세한 내용은 LICENSE 파일 참조
-
-## 👥 기여
-
-프로젝트 개선에 기여하시고 싶으시면:
-1. Fork 후 브랜치 생성
-2. 변경사항 커밋
-3. Pull Request 생성
-
----
-
-**대림대학교 포토존** - 실시간 AI 기술로 더 나은 포토 경험을 제공합니다.

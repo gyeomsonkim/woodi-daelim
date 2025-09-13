@@ -1,11 +1,11 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import styled, { keyframes, css } from 'styled-components';
-import { FilterType } from '../ControlPanel/ControlPanel';
 
 interface CameraViewProps {
   videoRef: React.RefObject<HTMLVideoElement>;
   className?: string;
-  currentFilter?: FilterType;
+  currentFilter?: TFilterType;
+  onRef?: (ref: { capturePhoto: () => void } | null) => void;
 }
 
 // Keyframes
@@ -85,7 +85,7 @@ const Container = styled.div`
 `;
 
 interface VideoProps {
-  $filterType: FilterType;
+  $filterType: TFilterType;
 }
 
 const Video = styled.video<VideoProps>`
@@ -167,7 +167,7 @@ const Video = styled.video<VideoProps>`
 `;
 
 interface FilterOverlayProps {
-  $filterType: FilterType;
+  $filterType: TFilterType;
 }
 
 const FilterOverlay = styled.div<FilterOverlayProps>`
@@ -215,7 +215,7 @@ const FilterElements = styled.div`
   position: relative;
 `;
 
-const FloatingEmoji = styled.span<{ $index: number; $filterType: FilterType }>`
+const FloatingEmoji = styled.span<{ $index: number; $filterType: TFilterType }>`
   position: absolute;
   
   /* Flower filter positions and animations */
@@ -346,9 +346,120 @@ const DebugInfo = styled.div`
 const CameraView: React.FC<CameraViewProps> = ({
   videoRef,
   className,
-  currentFilter = 'none'
+  currentFilter = 'none',
+  onRef
 }) => {
-  const getFilterEmojis = (filterType: FilterType) => {
+  
+  // 서버에 사진 업로드 함수
+  const uploadPhoto = useCallback(async (base64Data: string, filterUsed: string) => {
+    try {
+      const response = await fetch('http://localhost:3002/api/media/photo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          photoData: base64Data,
+          filterUsed,
+          timestamp: new Date().toISOString(),
+          metadata: {
+            resolution: `${window.innerWidth}x${window.innerHeight}`,
+            userAgent: navigator.userAgent,
+          }
+        })
+      });
+
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        console.log(`CameraView: 사진 업로드 완료 - ${result.data.photoInfo.fileName}`);
+        return { success: true, data: result.data };
+      } else {
+        throw new Error(result.error || '업로드 실패');
+      }
+    } catch (error) {
+      console.error('CameraView: 사진 업로드 오류:', error);
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }, []);
+
+  // 사진 촬영 함수
+  const capturePhoto = useCallback(async () => {
+    if (!videoRef.current) {
+      console.warn('CameraView: 비디오 요소가 준비되지 않음');
+      return;
+    }
+
+    const video = videoRef.current;
+    
+    // Canvas 생성
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) {
+      console.error('CameraView: Canvas context를 생성할 수 없음');
+      return;
+    }
+
+    // Canvas 크기를 비디오 크기에 맞춤
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    // 비디오 프레임을 Canvas에 그리기
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Canvas를 Base64로 변환하여 서버 업로드
+    const base64Data = canvas.toDataURL('image/png');
+    
+    // 현재 적용된 필터 확인
+    const filterUsed = currentFilter || 'none';
+    
+    console.log(`CameraView: 사진 촬영 완료, 서버 업로드 시작 (필터: ${filterUsed})`);
+    
+    // 서버에 업로드
+    const uploadResult = await uploadPhoto(base64Data, filterUsed);
+    
+    if (uploadResult.success) {
+      console.log(`CameraView: 사진 저장 완료 - uploads/${uploadResult.data?.photoInfo?.fileName}`);
+    } else {
+      console.error(`CameraView: 사진 업로드 실패 - ${uploadResult.error}`);
+      
+      // 업로드 실패 시 기존 다운로드 방식으로 폴백
+      const url = URL.createObjectURL(await new Promise<Blob>((resolve) => {
+        canvas.toBlob((blob) => {
+          resolve(blob!);
+        }, 'image/png');
+      }));
+      
+      const link = document.createElement('a');
+      const now = new Date();
+      const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, -5);
+      const fileName = `photozone-${timestamp}.png`;
+      
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      console.log(`CameraView: 폴백 다운로드 완료 - ${fileName}`);
+    }
+  }, [videoRef, currentFilter, uploadPhoto]);
+
+  // 부모 컴포넌트에 capture 함수 제공
+  useEffect(() => {
+    if (onRef) {
+      onRef({ capturePhoto });
+    }
+    
+    return () => {
+      if (onRef) {
+        onRef(null);
+      }
+    };
+  }, [onRef, capturePhoto]);
+  const getFilterEmojis = (filterType: TFilterType) => {
     switch (filterType) {
       case 'flower':
         return ['🌸', '🌺', '🌻', '🌷'];

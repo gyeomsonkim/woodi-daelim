@@ -3,6 +3,9 @@
 /.pnp
 .pnp.js
 
+# local files
+/server/uploads
+
 # Testing
 /coverage
 

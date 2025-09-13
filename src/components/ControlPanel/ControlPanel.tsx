@@ -1,15 +1,16 @@
 import React from 'react';
 import styled from 'styled-components';
 
-export type FilterType = 'flower' | 'space' | 'forest' | 'none';
-
 interface ControlPanelProps {
-  onFilterChange: (filter: FilterType) => void;
-  currentFilter: FilterType;
+  onFilterChange: (filter: TFilterType) => void;
+  currentFilter: TFilterType;
+  onCapturePhoto?: () => void;
+  isCapturing?: boolean;
 }
 
 const Container = styled.div`
   min-height: 100vh;
+  width: 100%;
   padding: 80px 40px;
   display: flex;
   flex-direction: column;
@@ -59,7 +60,7 @@ const FilterGrid = styled.div`
 
 interface FilterButtonProps {
   $isActive: boolean;
-  $filterType: 'flower' | 'space' | 'forest' | 'reset';
+  $filterType: TFilterType;
 }
 
 const FilterButton = styled.button<FilterButtonProps>`
@@ -76,15 +77,12 @@ const FilterButton = styled.button<FilterButtonProps>`
   padding: 0 0 16px 0;
   position: relative;
   overflow: hidden;
-
-  /* Default background */
-  background: #ffffff;
   
   /* Filter-specific backgrounds */
-  ${props => props.$filterType === 'flower' && `background: #0060cc;`}
-  ${props => props.$filterType === 'space' && `background: #019391;`}
-  ${props => props.$filterType === 'forest' && `background: #00dfc3;`}
-  ${props => props.$filterType === 'reset' && `background: #ffffff;`}
+  ${({ $filterType }) => $filterType === 'flower' && `background-color: #e75738;`}
+  ${({ $filterType }) => $filterType === 'space' && `background-color: #019391;`}
+  ${({ $filterType }) => $filterType === 'forest' && `background-color: #00dfc3;`}
+  ${({ $filterType }) => $filterType === 'reset' && `background-color: #ffffff;`}
 
   /* Active state */
   ${props => props.$isActive && `
@@ -102,47 +100,133 @@ const FilterButton = styled.button<FilterButtonProps>`
   }
 `;
 
-interface FilterLabelProps {
-  $filterType: 'flower' | 'space' | 'forest' | 'reset';
-  $isActive: boolean;
-}
-
-const FilterLabel = styled.div<FilterLabelProps>`
-  font-size: 0.9rem;
+const FilterLabel = styled.div<{ $filterType: TFilterType, $isActive: boolean }>`
+  font-size: 40px;
   font-weight: 500;
   letter-spacing: 0.02em;
-
-  /* Default color */
-  color: #3a4a5c;
   
   /* Filter-specific colors */
-  ${props => props.$filterType === 'flower' && `color: #ffffff;`}
-  ${props => props.$filterType === 'space' && `color: #ffffff;`}
-  ${props => props.$filterType === 'forest' && `color: #3a4a5c;`}
-  ${props => props.$filterType === 'reset' && `color: #3a4a5c;`}
+  color: #000000;
 
   /* Active state font weight */
-  ${props => props.$isActive && `font-weight: 600;`}
+  ${({ $isActive }) => $isActive && `font-weight: 600;`}
 
   @media (max-width: 768px) {
     font-size: 0.8rem;
   }
 `;
 
-const ControlPanel: React.FC<ControlPanelProps> = ({ onFilterChange, currentFilter }) => {
+const PhotoButton = styled.button<{ $isCapturing: boolean }>`
+  width: 300px;
+  height: 300px;
+  border: none;
+  border-radius: 16px;
+  cursor: ${props => props.$isCapturing ? 'not-allowed' : 'pointer'};
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  background-color: ${props => props.$isCapturing ? '#666666' : '#FF6B35'};
+  opacity: ${props => props.$isCapturing ? 0.6 : 1};
+  
+  &:hover {
+    transform: ${props => props.$isCapturing ? 'none' : 'translateY(-2px)'};
+    background-color: ${props => props.$isCapturing ? '#666666' : '#FF8C42'};
+  }
+
+  &:active {
+    transform: ${props => props.$isCapturing ? 'none' : 'translateY(0)'};
+  }
+
+  @media (max-width: 768px) {
+    width: 100px;
+    height: 140px;
+  }
+`;
+
+const CaptureIcon = styled.div<{ $isCapturing: boolean }>`
+  font-size: 48px;
+  margin-bottom: 8px;
+  color: #FFFFFF;
+  
+  @media (max-width: 768px) {
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+`;
+
+const CaptureOverlay = styled.div<{ $show: boolean }>`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: ${props => props.$show ? 'flex' : 'none'};
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(10px);
+`;
+
+const CaptureMessage = styled.div`
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  padding: 40px 60px;
+  text-align: center;
+  backdrop-filter: blur(20px);
+  
+  @media (max-width: 768px) {
+    padding: 30px 40px;
+    margin: 0 20px;
+  }
+`;
+
+const CaptureMessageIcon = styled.div`
+  font-size: 64px;
+  margin-bottom: 20px;
+  
+  @media (max-width: 768px) {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+`;
+
+const CaptureMessageText = styled.div`
+  font-size: 28px;
+  font-weight: 600;
+  color: #FFFFFF;
+  
+  @media (max-width: 768px) {
+    font-size: 20px;
+  }
+`;
+
+const ControlPanel: React.FC<ControlPanelProps> = ({ 
+  onFilterChange, 
+  currentFilter, 
+  onCapturePhoto = () => {}, 
+  isCapturing = false 
+}) => {
   const filters = [
     {
-      id: 'flower' as FilterType,
+      id: 'flower' as TFilterType,
       name: '꽃',
       type: 'flower' as const
     },
     {
-      id: 'space' as FilterType,
+      id: 'space' as TFilterType,
       name: '우주',
       type: 'space' as const
     },
     {
-      id: 'forest' as FilterType,
+      id: 'forest' as TFilterType,
       name: '숲',
       type: 'forest' as const
     }
@@ -184,7 +268,30 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ onFilterChange, currentFilt
             초기화
           </FilterLabel>
         </FilterButton>
+        <PhotoButton
+          $isCapturing={isCapturing}
+          onClick={onCapturePhoto}
+          disabled={isCapturing}
+        >
+          <CaptureIcon $isCapturing={isCapturing}>
+            📸
+          </CaptureIcon>
+          <FilterLabel 
+            $filterType="reset"
+            $isActive={false}
+          >
+            {isCapturing ? '촬영 중...' : '촬영하기'}
+          </FilterLabel>
+        </PhotoButton>
       </FilterGrid>
+      
+      {/* 촬영 중 오버레이 마스크 */}
+      <CaptureOverlay $show={isCapturing}>
+        <CaptureMessage>
+          <CaptureMessageIcon>📸</CaptureMessageIcon>
+          <CaptureMessageText>현재 촬영중입니다</CaptureMessageText>
+        </CaptureMessage>
+      </CaptureOverlay>
     </Container>
   );
 };

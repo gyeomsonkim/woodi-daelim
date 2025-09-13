@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled, { createGlobalStyle, keyframes, css } from 'styled-components';
 import { io, Socket } from 'socket.io-client';
-import ControlPanel, { FilterType } from './components/ControlPanel/ControlPanel';
+import ControlPanel from './components/ControlPanel/ControlPanel';
 
 // Global styles for ControlPanel App
 const GlobalStyle = createGlobalStyle`
@@ -109,10 +109,11 @@ const DeveloperInfo = styled.div`
 `;
 
 const ControlPanelApp: React.FC = () => {
-  const [currentFilter, setCurrentFilter] = useState<FilterType>('none');
+  const [currentFilter, setCurrentFilter] = useState<TFilterType>('none');
   const [isConnected, setIsConnected] = useState(false);
   const [mainDisplayConnected, setMainDisplayConnected] = useState(false);
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
 
   // 소켓 연결 및 통신 설정
   useEffect(() => {
@@ -150,6 +151,23 @@ const ControlPanelApp: React.FC = () => {
       console.log('필터 업데이트 수신:', data.filter);
     });
 
+    // 촬영 시작 확인 수신
+    newSocket.on('captureStarted', () => {
+      console.log('컨트롤 패널: 촬영 시작 확인');
+      setIsCapturing(true);
+    });
+
+    // 촬영 완료 수신
+    newSocket.on('captureFinished', () => {
+      console.log('컨트롤 패널: 촬영 완료');
+      setIsCapturing(false);
+    });
+
+    // 카운트다운 업데이트 수신 (선택적으로 사용)
+    newSocket.on('countdownUpdate', (data) => {
+      console.log(`컨트롤 패널: 카운트다운 ${data.count}`);
+    });
+
     // 연결 에러 처리
     newSocket.on('connect_error', (error) => {
       console.error('소켓 연결 에러:', error);
@@ -162,12 +180,28 @@ const ControlPanelApp: React.FC = () => {
   }, []);
 
   // 필터 변경 핸들러
-  const handleFilterChange = (filter: FilterType) => {
+  const handleFilterChange = (filter: TFilterType) => {
     if (socket && isConnected) {
       socket.emit('changeFilter', { filter });
       console.log(`필터 변경 요청 전송: ${filter}`);
     } else {
       console.warn('소켓이 연결되지 않음');
+    }
+  };
+
+  // 사진 촬영 시작 핸들러
+  const handleCapturePhoto = () => {
+    if (socket && isConnected && mainDisplayConnected && !isCapturing) {
+      socket.emit('startCapture');
+      console.log('사진 촬영 시작 요청 전송');
+    } else {
+      if (!isConnected) {
+        console.warn('소켓 서버가 연결되지 않음');
+      } else if (!mainDisplayConnected) {
+        console.warn('메인 디스플레이가 연결되지 않음');
+      } else if (isCapturing) {
+        console.warn('이미 촬영 중입니다');
+      }
     }
   };
 
@@ -194,6 +228,8 @@ const ControlPanelApp: React.FC = () => {
           <ControlPanel 
             currentFilter={currentFilter}
             onFilterChange={handleFilterChange}
+            onCapturePhoto={handleCapturePhoto}
+            isCapturing={isCapturing}
           />
 
           {/* 개발자 정보 */}

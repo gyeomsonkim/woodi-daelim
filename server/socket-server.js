@@ -16,12 +16,13 @@ app.use(cors({
   credentials: true
 }));
 
-// JSON 파싱 미들웨어
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// JSON 파싱 미들웨어 (큰 파일 지원)
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
 // API 라우트 설정
 app.use('/api/filters', filterRoutes);
+app.use('/api/media', require('./routes/media'));
 
 const io = socketIo(server, {
   cors: {
@@ -116,6 +117,41 @@ io.on('connection', (socket) => {
       // 에러가 발생해도 기본 동작은 수행
       io.emit('filterUpdate', { filter: currentFilter });
     }
+  });
+
+  // 사진 촬영 시작 요청 처리
+  socket.on('startCapture', () => {
+    console.log('📸 사진 촬영 시작 요청');
+    
+    // 메인 디스플레이에 카운트다운 시작 알림
+    if (connectedClients.mainDisplay) {
+      io.to(connectedClients.mainDisplay).emit('startCountdown');
+      console.log('✅ 메인 디스플레이에 카운트다운 시작 신호 전송');
+    } else {
+      console.warn('⚠️ 메인 디스플레이가 연결되지 않음');
+    }
+    
+    // 컨트롤 패널에 촬영 시작 확인 알림
+    if (connectedClients.controlPanel) {
+      io.to(connectedClients.controlPanel).emit('captureStarted');
+    }
+  });
+
+  // 카운트다운 틱 이벤트 (메인 디스플레이에서 컨트롤 패널로)
+  socket.on('countdownTick', (data) => {
+    const { count } = data;
+    console.log(`⏰ 카운트다운: ${count}`);
+    
+    // 모든 클라이언트에 카운트다운 상태 브로드캐스트
+    io.emit('countdownUpdate', { count });
+  });
+
+  // 사진 촬영 완료 알림
+  socket.on('captureComplete', () => {
+    console.log('✅ 사진 촬영 완료');
+    
+    // 모든 클라이언트에 촬영 완료 알림
+    io.emit('captureFinished');
   });
 
   // 연결 해제 처리
